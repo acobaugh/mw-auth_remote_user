@@ -1,0 +1,49 @@
+1) Get apache-based authentication working, such that it sets REMOTE_USER and REMOTE_REALM
+appropriately. 
+
+See htaccess-example for the mod_rewrite magic to redirect to auth.php when
+the user visits Special:UserLogin
+
+2) Copy auth.php to the root of your installation, and make sure whatever
+apache auth module you are using is set to protect just auth.php
+
+3) Copy Auth_REMOTE_USER.php to extensions/
+
+4) Add these to LocalSettings.php, adjusting accordingly:
+
+include_once("extensions/Auth_REMOTE_USER.php");
+$wgAuth = new Auth_REMOTE_USER();
+
+# REMOTE_REALM to ldap server mapping
+$realm_to_ldap = array(
+        'dce.psu.edu' => array(
+                'hostname' => 'dirapps.aset.psu.edu',
+                'base' => 'dc=psu,dc=edu',
+                'user_objectclass' => 'posixAccount',
+                'user_attr' => 'uid',
+                'group_objectclass' => 'groupOfNames',
+                'group_name_attr' => 'cn',
+                'member_attr' => 'member',
+                'name_attr' => 'cn',
+                'implicit_group_name' => 'psu'
+
+        ),
+        'BX.PSU.EDU' => array(
+                'hostname' => 'ldap.bx.psu.edu',
+                'base' => 'dc=bx,dc=psu,dc=edu',
+                'user_objectclass' => 'posixAccount',
+                'user_attr' => 'uid',
+                'group_objectclass' => 'groupOfNames',
+                'group_name_attr' => 'cn',
+                'member_attr' => 'member',
+                'name_attr' => 'cn',
+                'implicit_group_name' => 'bx'
+        )
+);
+
+# REMOTE_REALM to email domain mapping
+$realm_to_email_domain = array(
+        'BX.PSU.EDU' => 'bx.psu.edu',
+        'dce.psu.edu' => 'psu.edu'
+);
+
