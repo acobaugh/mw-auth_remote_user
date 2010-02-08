@@ -1,0 +1,15 @@
+RewriteEngine On
+
+RewriteCond %{REQUEST_URI} ^/dev/index.php
+RewriteCond %{QUERY_STRING} ^title=Special:UserLogin(.*)
+RewriteRule (.*)$ https://wiki.bx.psu.edu/dev/auth.php [R,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?title=$1 [L,QSA]
+
+<FilesMatch "auth.php">
+	AuthType Cosign
+	CosignProtected on
+	Require valid-user
+</FilesMatch>
