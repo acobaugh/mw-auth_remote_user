@@ -87,7 +87,7 @@ class Auth_REMOTE_USER extends AuthPlugin {
 		global $_SERVER;
 		// Register our hook function.  This hook will be executed on every page
 		// load.  Its purpose is to automatically log the user in, if necessary.
-		if ( strlen($_SERVER['REMOTE_USER']) ) {
+		if (array_key_exists('REMOTE_USER', $_SERVER)) {
 			global $wgExtensionFunctions;
 			if (!isset($wgExtensionFunctions)) {
 				$wgExtensionFunctions = array();
