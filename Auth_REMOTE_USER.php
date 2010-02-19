@@ -1,5 +1,18 @@
 <?php
 
+if (!defined( 'MEDIAWIKI' )) {
+	die('This file is a MediaWiki extension, it is not a valid entry point');
+}
+
+$wgExtensionCredits['other'][] = array(
+	'path' => __FILE__,
+	'name' => "Auth_REMOTE_USER",
+	'description' => "Authenticates user based on REMOTE_USER. Creates users if they don't exist, possibly using LDAP.",
+	'version' => "1.0",
+	'author' => "Andy Cobaugh (phalenor@bx.psu.edu)",
+	'url' => "http://github.com/phalenor/mw-auth_remote_user"
+);
+
 // Auth_REMOTE_USER extends the AuthPlugin class
 require_once('AuthPlugin.php');
  
