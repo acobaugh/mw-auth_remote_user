@@ -35,7 +35,11 @@ function efAuth_REMOTE_USER() {
 	}
 
 	/* Get the short principal name and realm */
-	list($spn, $foo) = split('@', $_SERVER['REMOTE_USER']);
+	if (strpos($_SERVER['REMOTE_USER'], '@')) {
+		list($spn, $foo) = split('@', $_SERVER['REMOTE_USER']);
+	} else {
+		$spn = $_SERVER['REMOTE_USER'];
+	}
 	$realm = $_SERVER['REMOTE_REALM'];
 
 	/* Get the name out of ldap based on spn and realm
@@ -71,7 +75,7 @@ function efAuth_REMOTE_USER() {
 		$email = '';
 	}
 
-  // Submit a fake login form to authenticate the user.
+	/* Submit a fake login form to authenticate the user. */
 	$params = new FauxRequest(
 		array(
 			'wpName' => $_SERVER['REMOTE_USER'],
@@ -82,16 +86,34 @@ function efAuth_REMOTE_USER() {
 			'wpEmail' => $email
 	  ));
  
-  // authenticateUserData() will automatically create new users.
-  $loginForm = new LoginForm($params);
-  $result = $loginForm->authenticateUserData();
-  if ($result != LoginForm::SUCCESS) {
-    error_log('Unexpected REMOTE_USER authentication failure.');
-    return;
-  }
- 
-  $wgUser->setCookies();
-  return;
+	// authenticateUserData() will automatically create new users.
+	$loginForm = new LoginForm($params);
+	$result = $loginForm->authenticateUserData();
+
+	if ($result == LoginForm::NEED_TOKEN) {
+		$token = $loginForm->getLoginToken();
+		$params = new FauxRequest(
+			array(
+				'wpName' => $_SERVER['REMOTE_USER'],
+				'wpPassword' => 'notempty',
+				'wpDomain' => '',
+				'wpRemember' => '',
+				'wpRealName' => $real_name,
+				'wpEmail' => $email,
+				'wpLoginToken' => $token
+			)
+		);
+		$loginForm = new LoginForm($params);
+		$result = $loginForm->authenticateUserData();
+	}
+	
+	if ($result != LoginForm::SUCCESS) {
+		error_log("Unexpected REMOTE_USER authentication failure. Result was: $result");
+		return;
+	}
+
+	$wgUser->setCookies(); 
+	return;
 }
  
 class Auth_REMOTE_USER extends AuthPlugin {
@@ -145,7 +167,7 @@ class Auth_REMOTE_USER extends AuthPlugin {
 		global $_SERVER;
 		 //list($spn, $realm) = split('@', $_SERVER['REMOTE_USER']);
 		$spn = $_SERVER['REMOTE_USER'];
-	
+
 		return isset($_SERVER['REMOTE_USER']) &&
 			(strtolower($username) == strtolower($spn));
 	}
@@ -155,14 +177,14 @@ class Auth_REMOTE_USER extends AuthPlugin {
 	}
  
 	function updateUser(&$user) {
-		// We only set this stuff when accounts are created.
 		return true;
 	}
 	 
 	function autoCreate() {
 		return true;
 	}
-	 
+
+	/* we don't allow local authentication */	
 	function strict() {
 		return true;
 	}
